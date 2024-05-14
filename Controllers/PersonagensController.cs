@@ -111,33 +111,24 @@ namespace RpgApi.Controllers
                 return BadRequest(ex.Message);
             }
         }
-
-        [HttpGet("{persoangemId}")]
-
-        public async Task<IActionResult> GetHP(int id)
-        {
-
+/*
+        [HttpGet("{personagemId}")]
+            public async Task<IActionResult> GetHabilidadesPersonagem(intpersonagemId)  {
             try
-            {
-                List<PersonagemHabilidade> phList = new List<PersonagemHabilidade>();
-                phList = await _context.TB_PERSONAGENS_HABILIDADES
-                .Include(p => p.Habilidade)
+                {
+                List<PersonagemHabilidade> phLista = new List<PersonagemHabilidade>();  phLista = await _context.TB_PERSONAGENS_HABILIDADES
                 .Include(p => p.Personagem)
-                .Where(p => p.Personagem.Id == personagemId)
-             .ToListAsync();
-
-                return Ok(phList);
-            }
-
+                .Include(p => p.Habilidade)
+                .Where(p => p.Personagem.Id == personagemId).ToListAsync(); 
+                
+                 return Ok(phLista);
+                }
             catch (System.Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
-
-
-
-        }
-
+                {
+                    return BadRequest(ex.Message);
+                 }
+ } 
+*/
         [HttpGet("GetHabilidades")]
         public async Task<IActionResult> GetHabilidades()
         {
