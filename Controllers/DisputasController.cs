@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using RpgApi.Data;
 using RpgApi.Models;
 using System.Text;
+using Microsoft.EntityFrameworkCore.Query.Internal;
 
 
 namespace RpgApi.Controllers
@@ -85,6 +86,8 @@ namespace RpgApi.Controllers
 
                 PersonagemHabilidade ph = await _context.TB_PERSONAGENS_HABILIDADES.Include(P => P.Habilidade).FirstOrDefaultAsync(pBusca => pBusca.HabilidadeId == x.HabilidadeId && pBusca.PersonagemId == x.AtacanteId);
 
+
+
                 
                 return Ok(x);
             }
@@ -93,5 +96,25 @@ namespace RpgApi.Controllers
                 return BadRequest(ex.Message);
             }
         }
+
+
+    [HttpPost("DisuputaEmGrupo")]
+
+    public async Task<IActionResult> DisputaEmGrupo(Disputa x)
+
+    {
+        try
+        {
+            x.Resultado = new List<string>();
+
+            List<Personagem> personagens = await _context.TB_PERSONAGENS.Include(p => p.Arma).Include(p => p.PersonagemHabilidades).ThenInclude(px => px.Habilidade).Where(p => p.ListaPersonagens.Contains(personagens.Id).ToListAsyc();
+
+            int qtd 
+        }
+
+
+
+
+    }
     }
 }
