@@ -10,6 +10,8 @@ using RpgApi.Data;
 using RpgApi.Models;
 using System.Text;
 using Microsoft.EntityFrameworkCore.Query.Internal;
+using Microsoft.AspNetCore.Http.HttpResults;
+using System.Collections.Generic;
 
 
 namespace RpgApi.Controllers
@@ -23,7 +25,7 @@ namespace RpgApi.Controllers
         public DisputasController(DataContext context)
         {
             _context = context;
-        } 
+        }
 
         [HttpPost("Arma")]
 
@@ -32,7 +34,7 @@ namespace RpgApi.Controllers
 
             try
             {
-                Personagem? atacante  = await _context.TB_PERSONAGENS.Include(p => p.Arma).FirstOrDefaultAsync(p => p.Id == x.Id);
+                Personagem? atacante = await _context.TB_PERSONAGENS.Include(p => p.Arma).FirstOrDefaultAsync(p => p.Id == x.Id);
 
                 Personagem? oponente = await _context.TB_PERSONAGENS.FirstOrDefaultAsync(p => p.Id == x.OponenteId);
 
@@ -41,10 +43,10 @@ namespace RpgApi.Controllers
                 dano = dano - new Random().Next(oponente.Defesa);
 
                 if (dano > 0)
-                 oponente.PontosVida = oponente.PontosVida - (int)dano;
-                if(oponente.PontosVida < 0)
-                  x.Narracao = $"{oponente.Nome} foi derrotado !";
-                
+                    oponente.PontosVida = oponente.PontosVida - (int)dano;
+                if (oponente.PontosVida < 0)
+                    x.Narracao = $"{oponente.Nome} foi derrotado !";
+
                 _context.TB_PERSONAGENS.Update(oponente);
                 await _context.SaveChangesAsync();
 
@@ -55,14 +57,14 @@ namespace RpgApi.Controllers
                 dados.AppendFormat(" Pontos de vida  de atacante: {0}.", atacante.PontosVida);
                 dados.AppendFormat(" Pontos de do Oponente: {0}", oponente.Nome);
                 dados.AppendFormat(" Arma Utilizado: {0}", atacante.Arma.Nome);
-                dados.AppendFormat(" Dano {0}",dano);
+                dados.AppendFormat(" Dano {0}", dano);
 
                 x.Narracao += dano.ToString();
                 x.DataDisputa = DateTime.Now;
                 _context.TB_DISPUTA.Add(x);
                 _context.SaveChanges();
-                
-                
+
+
                 return Ok(x);
             }
             catch (System.Exception ex)
@@ -79,7 +81,7 @@ namespace RpgApi.Controllers
         {
             try
             {
-                
+
                 Personagem atacante = await _context.TB_PERSONAGENS.Include(p => p.PersonagemHabilidades).ThenInclude(ph => ph.Habilidade).FirstOrDefaultAsync(p => p.Id == x.AtacanteId);
 
                 Personagem oponente = await _context.TB_PERSONAGENS.FirstOrDefaultAsync(p => p.Id == x.AtacanteId);
@@ -88,7 +90,7 @@ namespace RpgApi.Controllers
 
 
 
-                
+
                 return Ok(x);
             }
             catch (System.Exception ex)
@@ -98,22 +100,22 @@ namespace RpgApi.Controllers
         }
 
 
-    [HttpPost("DisuputaEmGrupo")]
+        [HttpPost("DisuputaEmGrupo")]
 
-    public async Task<IActionResult> DisputaEmGrupo(Disputa x)
+        public async Task<IActionResult> DisputaEmGrupo(Disputa x)
 
-    {
-        try
         {
-            x.Resultado = new List<string>();
-
-            List<Personagem> personagens = await _context.TB_PERSONAGENS.Include(p => p.Arma).Include(p => p.PersonagemHabilidades).ThenInclude(px => px.Habilidade).Where(p => x.ListaIdPersonagens.Contains(p.Id)).ToListAsync();
-
-            int qtdPersonagemVivos = personagens.FindAll(p => p.PontosVida > 0).Count;
-
-            while(qtdPersonagemVivos > 1)
+            try
             {
-                    List<Personagem> atacantes = personagens.Where(p =>  p.PontosVida > 0).ToList();
+                x.Resultado = new List<string>();
+
+                List<Personagem> personagens = await _context.TB_PERSONAGENS.Include(p => p.Arma).Include(p => p.PersonagemHabilidades).ThenInclude(px => px.Habilidade).Where(p => x.ListaIdPersonagens.Contains(p.Id)).ToListAsync();
+
+                int qtdPersonagemVivos = personagens.FindAll(p => p.PontosVida > 0).Count;
+
+                while (qtdPersonagemVivos > 1)
+                {
+                    List<Personagem> atacantes = personagens.Where(p => p.PontosVida > 0).ToList();
                     Personagem atacante = atacantes[new Random().Next(atacantes.Count)];
                     x.AtacanteId = atacante.Id;
 
@@ -127,7 +129,7 @@ namespace RpgApi.Controllers
 
                     bool ataqueUsaArma = (new Random().Next(1) == 0);
 
-                    if(ataqueUsaArma && atacante.Arma != null)
+                    if (ataqueUsaArma && atacante.Arma != null)
                     {
 
                         dano = atacante.Arma.Dano + (new Random().Next(atacante.Forca));
@@ -143,9 +145,9 @@ namespace RpgApi.Controllers
 
 
                     }
-                    else if(atacante.PersonagemHabilidades.Count != 0)
+                    else if (atacante.PersonagemHabilidades.Count != 0)
                     {
-                        
+
                         int sorteioHabilidadeId = new Random().Next(atacante.PersonagemHabilidades.Count);
                         Habilidade habilidadeEscolhida = atacante.PersonagemHabilidades[sorteioHabilidadeId].Habilidade;
                         ataqueUsado = habilidadeEscolhida.Nome;
@@ -159,12 +161,12 @@ namespace RpgApi.Controllers
                         resultado = string.Format("{0} atacou {1} usado {2} com o dano {3}", atacante.Nome, oponente.Nome, ataqueUsado, dano);
                         x.Narracao += resultado;
                         x.Resultado.Add(resultado);
-                        
-                        
+
+
 
                     }
 
-                    if(!string.IsNullOrEmpty(ataqueUsado) )
+                    if (!string.IsNullOrEmpty(ataqueUsado))
                     {
                         atacante.Vitorias++;
                         atacante.Derrotas++;
@@ -189,26 +191,58 @@ namespace RpgApi.Controllers
                         break;
                     }
 
+                }
+
+                _context.TB_PERSONAGENS.UpdateRange(personagens);
+                await _context.SaveChangesAsync();
+
+                return Ok(x);
+
+
             }
 
-            _context.TB_PERSONAGENS.UpdateRange(personagens);
-            await _context.SaveChangesAsync();
+            catch (System.Exception ex)
+            {
+                return BadRequest(ex.Message)
+            ;
 
-            return Ok(x);
-            
 
+
+
+
+            }
         }
 
-        catch (System.Exception ex)
+        [HttpDelete("ApagarDisputas")]
+        public async Task<IActionResult> DeleteAsync()
         {
-            return BadRequest(ex.Message)
-        ;
+            try
+            {
+                List<Disputa> disputas = await _context.TB_DISPUTA.ToListAsync(); _context.TB_DISPUTA.RemoveRange(disputas);
+                await _context.SaveChangesAsync();
+                return Ok("Disputas apagadas");
+            }
+            catch (System.Exception ex)
+            { return BadRequest(ex.Message); }
+        }
 
-
-
-
-
-    }
-    }
+        [HttpGet("Listar")]
+        public async Task<IActionResult> ListarAsync()
+        {
+            try
+            {
+                List<Disputa> disputas =
+                await _context.TB_DISPUTA.ToListAsync();
+                return Ok(disputas);
+            }
+            catch (System.Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+ 
+        
 }
 }
+
+

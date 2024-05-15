@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RpgApi.Data;
@@ -136,6 +137,71 @@ namespace RpgApi.Controllers
 
         }
 
+         [HttpGet("{usuarioId}")]
+        public async Task<IActionResult> GetUsuario(int usuarioId)
+        {
+            try
+            {
+                //List exigirá o using System.Collections.Generic
+                Usuario usuario = await _context.TB_USUARIOS.FirstOrDefaultAsync(x => x.Id == usuarioId); //Busca o usuário no banco através do Id .FirstOrDefaultAsync(x => x.Id == usuarioId);
+                return Ok(usuario);
+            }
+            catch (System.Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("GetByLogin/{login}")]
+        public async Task<IActionResult> GetUsuariobyLogin(string login)
+        {
+            try
+            {
+                //List exigirá o using System.Collections.Generic
+                Usuario usuario = await _context.TB_USUARIOS.FirstOrDefaultAsync(x => x.Username.ToLower() == login.ToLower()); 
+                
+                return Ok(usuario);
+                //Busca o usuário no banco através do login .FirstOrDefaultAsync(x => x.Username.ToLower() == login.ToLower());  return Ok(usuario);
+            }
+            catch (System.Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPut("AtualizarLocalizacao")]
+        public async Task<IActionResult> AtualizarLocalizacao(Usuario u)
+        {
+            try
+            {
+                Usuario usuario = await _context.TB_USUARIOS.FirstOrDefaultAsync(x => x.Id == u.Id); //Busca o usuário no banco através do Id .FirstOrDefaultAsync(x => x.Id == u.Id);
+                usuario.Latitude = u.Latitude;
+                usuario.Longitude = u.Longitude;
+                var attach = _context.Attach(usuario);
+                attach.Property(x => x.Id).IsModified = false;
+                attach.Property(x => x.Latitude).IsModified = true;
+                attach.Property(x => x.Longitude).IsModified = true;
+                int linhasAfetadas = await _context.SaveChangesAsync();
+                
+                return Ok(usuario);
+                 //Confirma a alteração no banco  (linhasAfetadas); //Retorna as linhas afetadas (Geralmente sempre 1 linha msm) }
+            }
+            catch (System.Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        
+
+
+
+
+
+
+    }
 }
 
-}
+
+
+
